@@ -1,14 +1,14 @@
-#TEXT RESTORE
+# TEXT RESTORE
 
-##Required
+## Required
 python 1.12.3
 
-##Installation
+## Installation
 Clone the repository:
 ```git clone https://github.com/yourusername/text-restorer.git
 cd text-restorer
 ```
-##Running
+## Running
 ```
 python main.py
 ```
