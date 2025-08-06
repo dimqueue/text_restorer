@@ -71,7 +71,7 @@ class TextRestorer:
 
     def get_all_words_for_position(self, damaged_text):
         for i in range(len(damaged_text)):
-            max_length = min(10, len(damaged_text) - i)
+            max_length = min(15, len(damaged_text) - i)
 
             for j in range(1, max_length + 1):
                 if i + j > len(damaged_text):
