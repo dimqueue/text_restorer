@@ -1,14 +1,14 @@
 from collections import defaultdict
 from typing import Dict, List, Tuple
-import heapq, math
-
+import heapq
+import math
 
 
 class TextRestorer:
     def __init__(self):
         self.dictionary = set()
         self.word_frequencies = {}
-        self.graph = Graph()
+        self.candidate_store = CandidateStore()
 
     def load_dictionary(self, filename):
         with open(filename, 'r', encoding='utf-8') as f:
@@ -32,9 +32,7 @@ class TextRestorer:
 
     def get_frequency_coefficient(self, word):
         frequency = self.word_frequencies.get(word, 1)
-
         coefficient = math.log(frequency + 1)
-
         return coefficient
 
     def match_pattern(self, pattern, word) -> bool:
@@ -66,9 +64,7 @@ class TextRestorer:
                 base_weight += 1
 
         pattern_weight = base_weight * len(pattern) ** 2
-
         frequency_coeff = self.get_frequency_coefficient(word)
-
         final_weight = pattern_weight * frequency_coeff
 
         return final_weight
@@ -90,7 +86,7 @@ class TextRestorer:
             if len(word) == pattern_length:
                 if self.match_pattern(pattern, word):
                     weight = self.cost(pattern, word)
-                    self.graph.add_word(i, word, weight)
+                    self.candidate_store.add_candidate(i, word, weight)
 
     def restore_text_dp(self, damaged_text) -> Tuple[float, List[str]]:
         n = len(damaged_text)
@@ -99,9 +95,9 @@ class TextRestorer:
         dp[n] = (0, [])
 
         for i in range(n - 1, -1, -1):
-            words_at_position = self.graph.get_top_words_at_position(i)
+            candidates_at_position = self.candidate_store.get_candidates_at_position(i)
 
-            for word, weight in words_at_position:
+            for word, weight in candidates_at_position:
                 word_length = len(word)
                 if i + word_length <= n:
                     total_weight = weight + dp[i + word_length][0]
@@ -129,17 +125,17 @@ class TextRestorer:
         self.get_all_words_for_position(damaged_text)
 
         for i in range(len(damaged_text)):
-            words = self.graph.get_top_words_at_position(i)
-            if words:
-                print(f"Position {i}: {words[:5]}")
+            candidates = self.candidate_store.get_candidates_at_position(i)
+            if candidates:
+                print(f"Position {i}: {candidates[:5]}")
 
 
-class Graph:
+class CandidateStore:
     def __init__(self, max_words_per_position: int = 30):
         self.positions: Dict[int, List[Tuple[float, str]]] = defaultdict(list)
         self.max_words = max_words_per_position
 
-    def add_word(self, position: int, word: str, weight: float):
+    def add_candidate(self, position: int, word: str, weight: float):
         heap = self.positions[position]
 
         if len(heap) < self.max_words:
@@ -147,16 +143,16 @@ class Graph:
         elif weight > heap[0][0]:
             heapq.heapreplace(heap, (weight, word))
 
-    def get_top_words_at_position(self, position: int) -> List[Tuple[str, float]]:
+    def get_candidates_at_position(self, position: int) -> List[Tuple[str, float]]:
         heap = self.positions[position]
         return [(word, weight) for weight, word in sorted(heap, reverse=True)]
 
 
 def main():
-    textRestorer = TextRestorer()
+    text_restorer = TextRestorer()
 
-    textRestorer.load_dictionary("popular.txt")
-    textRestorer.load_frequencies("frequencies.txt")
+    text_restorer.load_dictionary("popular.txt")
+    text_restorer.load_frequencies("frequencies.txt")
 
     test_cases = [
         "Al*cew*sbegninnigtoegtver*triedofsitt*ngbyh*rsitsreonhtebnakandofh*vingnothi*gtodoonc*ortw*cesh*hdapee*edintoth*boo*h*rsiste*wasr*adnigbuti*hadnopictu*esorc*nve*sati*nsinitandwhatisth*useofab**kth*ughtAlic*withou*pic*u*esorco*versa*ions",
@@ -168,7 +164,7 @@ def main():
         print(f"Testing: {test_text}")
         print(f"{'=' * 50}")
 
-        textRestorer.start(test_text)
+        text_restorer.start(test_text)
 
 
 if __name__ == "__main__":
